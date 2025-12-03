@@ -1,2 +1,78 @@
 ---
+- name: AWS Configuration Ansible
+  hosts: localhost
+  gather_facts: no
 
+  tasks:
+    - name: create vpc
+      ec2_vpc_net:
+        name: ansible-vpc
+        cidr_block: 10.0.0.0/16
+        tags:
+          Name: ansible-vpc
+      register: vpc_result
+
+    - name: create internet gateway
+      ec2_vpc_igw:
+        vpc_id: "{{vpc_result.vpc.id}}"
+        state: present
+        tags:
+          Name: ansible-igw
+      register: igw_result
+
+    - name: create subnet
+      ec2_vpc_subnet:
+        state: present
+        vpc_id: "{{vpc_result.vpc.id}}"
+        cidr: 10.0.0.0/24
+        az: ap-northeast-2a
+        tags:
+          Name: ansible-sn
+      register: sn_result
+
+    - name: create route table
+      ec2_vpc_route_table:
+        vpc_id: "{{vpc_result.vpc.id}}"
+        region: ap-northeast-2
+        tags:
+          Name: ansible-pub-rt
+        subnets:
+          - "{{ sn_result.subnet.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ igw_result.gateway_id }}"
+      register: rt_result
+
+    - name: create security group
+      ec2_security_group:
+        name: ansible-pub-sg
+        description: Allow SSH, HTTP
+        vpc_id: "{{vpc_result.vpc.id}}"
+        rules:
+          - proto: tcp
+            ports:
+              - 80
+              - 22
+            cidr_ip: 0.0.0.0/0
+        tags:
+          Name: ansible-sg
+        register: sg_result
+
+    - name: create ec2_instance
+      ec2_instance:
+        name: ansible-ec2-web
+        key_name: seoul-key
+        vpc_subnet_id: "{{ sn_result.subnet.id }}"
+        instance_type: t3.micro
+        security_group: "{{sg_result.group_id}}"
+        network_interfaces:
+          - assign_public_ip: true
+        image_id: ami-04fcc2023d6e37430
+        tags:
+          Name: ansible-ec2-web
+        user_data: |
+          #!/bin/bash
+          yum install -y httpd
+          systemctl start httpd
+          systemctl enable httpd
+          echo "<h1>Ansible Test Server</h1>" > /var/www/html/index.html
