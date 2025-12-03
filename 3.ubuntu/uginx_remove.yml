@@ -1,0 +1,27 @@
+---
+- name: Remove nginx
+  hosts: centos
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: remove epel-release
+      yum:
+        name: epel-release
+        state: absent
+    - name: remove nginx
+      yum:
+        name: nginx
+        state: absent
+
+- name: Remove ubuntu
+  hosts: ubuntu
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: remove nginx
+      apt:
+        pkg: nginx
+        state: absent
+        autoremove: yes

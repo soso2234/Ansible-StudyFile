@@ -1,0 +1,27 @@
+---
+- name: Install nginx
+  hosts: centos
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: Install epel-release
+      yum:
+        name: epel-release
+        state: latest
+     
+    - name: Install nginx web server
+      yum:
+        name: nginx
+        state: present
+
+    - name: download index.html
+      get_url:
+        url: https://www.centos.org
+        dest: /usr/share/nginx/html/
+        mode: 0644
+
+    - name: start nginx web server
+      service:
+        name: nginx
+        state: started

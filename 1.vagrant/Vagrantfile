@@ -1,0 +1,64 @@
+Vagrant.configure("2") do |config|
+  config.vbguest.auto_update = false
+
+###############
+# CentOS Node #
+###############
+  node_count = 3
+  node_count.times do |i|
+    config.vm.define "ansible-node0#{i+1}" do |cfg|
+      cfg.vm.box = "centos/7"
+      cfg.vm.provider "virtualbox" do |vb|
+        vb.name = "Ansible-Node0#{i+1}"
+      end
+      cfg.vm.host_name = "ansible-node0#{i+1}"
+      cfg.vm.network "private_network", ip: "192.168.8.1#{i+1}"
+      cfg.vm.network "forwarded_port", guest: "22", host: "6001#{i+1}", auto_correct: true, id: "ssh"
+      cfg.vm.synced_folder "../data", "/vagrant", disabled: true
+      cfg.vm.provision "shell", path: "bash_ssh_conf_4_CentOS.sh"
+      cfg.vm.provision "shell", inline: "rm -f /etc/yum.repos.d/*"
+      cfg.vm.provision "file", source: "centos.repo", destination: "centos.repo"
+      cfg.vm.provision "shell", inline: "mv centos.repo /etc/yum.repos.d/"
+    end
+  end
+
+###############
+# Ubuntu Node #
+###############
+  node_count = 3
+  node_count.times do |i|
+    config.vm.define "ansible-node0#{i+4}" do |cfg|
+      cfg.vm.box = "ubuntu/trusty64"
+      cfg.vm.provider "virtualbox" do |vb|
+        vb.name = "Ansible-Node0#{i+4}"
+      end
+      cfg.vm.host_name = "ansible-node0#{i+4}"
+      cfg.vm.network "private_network", ip: "192.168.8.1#{i+4}"
+      cfg.vm.network "forwarded_port", guest: "22", host: "6001#{i+4}", auto_correct: true, id: "ssh"
+      cfg.vm.synced_folder "../data", "/vagrant", disabled: true
+      cfg.vm.provision "shell", inline: "apt update"
+    end
+  end
+
+##################
+# Ansible Server #
+##################
+  config.vm.define "ansible-server" do |cfg|
+    cfg.vm.box = "centos/7"
+    cfg.vm.provider "virtualbox" do |vb|
+      vb.name = "Ansible-Server"
+    end
+    cfg.vm.host_name = "ansible-server"
+    cfg.vm.network "private_network", ip: "192.168.8.10"
+    cfg.vm.network "forwarded_port", guest: 22, host: 60010, auto_correct: true, id: "ssh"
+    cfg.vm.synced_folder "../data", "/vagrant", disabled: true
+    cfg.vm.provision "shell", inline: "rm -f /etc/yum.repos.d/*"
+    cfg.vm.provision "file", source: "centos.repo", destination: "centos.repo"
+    cfg.vm.provision "shell", inline: "mv centos.repo /etc/yum.repos.d/"
+    cfg.vm.provision "shell", inline: "yum install epel-release -y"
+    cfg.vm.provision "shell", inline: "yum install ansible -y"
+    cfg.vm.provision "file", source: "ansible_env_ready.yml", destination: "ansible_env_ready.yml"
+    cfg.vm.provision "shell", inline: "ansible-playbook ansible_env_ready.yml"
+    cfg.vm.provision "shell", path: "add_ssh_auth.sh", privileged: false
+  end
+end

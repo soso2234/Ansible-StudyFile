@@ -1,0 +1,11 @@
+---
+- name: create vpc
+  hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: create a VPC
+      ec2_vpc_net:
+        name: test
+        cidr_block: 172.16.0.0/16
+        region: ap-northeast-2
