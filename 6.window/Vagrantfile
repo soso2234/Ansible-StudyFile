@@ -1,0 +1,43 @@
+Vagrant.configure("2") do |config|
+
+#### Windows Server Node ####
+  config.vm.define "ansible-node07" do |cfg|
+    cfg.vm.box = "sysnet4admin/windows2016"
+    cfg.vm.provider "virtualbox" do |vb|
+      vb.name = "Ansible-Node07"
+      vb.customize ['modifyvm', :id, '--clipboard', 'bidirectional']
+      vb.gui = false
+    end
+    cfg.vm.host_name = "ansible-node07"
+    cfg.vm.network "private_network", ip: "192.168.8.17"
+    cfg.vm.network "forwarded_port", guest: 22, host: 60017, auto_correct: true, id: "ssh"
+    cfg.vm.synced_folder "../data", "/vagrant", disabled: true
+    cfg.vm.provision "shell", inline: "netsh advfirewall set allprofiles state off"
+    cfg.vm.provision "shell", privileged: true, inline: <<-POWERSHELL
+      Set-ExecutionPolicy Bypass -Scope Process -Force; `
+      [System.Net.ServicePointManager]::SecurityProtocol = `
+      [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+      iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+      shutdown -r -t 0 -f
+    POWERSHELL
+  end
+
+#### Ansible Server Node ####
+  config.vbguest.auto_update = false
+  config.vm.define "ansible-server" do |cfg|
+    cfg.vm.box = "centos/7"
+    cfg.vm.provider "virtualbox" do |vb|
+      vb.name = "Ansible-Server"
+    end
+    cfg.vm.host_name = "ansible-server"
+    cfg.vm.network "private_network", ip: "192.168.8.10"
+    cfg.vm.network "forwarded_port", guest: 22, host: 60010, auto_correct: true, id: "ssh"
+    cfg.vm.synced_folder "../data", "/vagrant", disabled: true
+    cfg.vm.provision "shell", path: "centos_repo.sh", privileged: true
+    cfg.vm.provision "shell", inline: "yum install epel-release -y"
+    cfg.vm.provision "shell", inline: "yum install ansible -y"
+    cfg.vm.provision "file", source: "ansible_env_ready.yml", destination: "ansible_env_ready.yml"
+    cfg.vm.provision "shell", inline: "ansible-playbook ansible_env_ready.yml"
+    cfg.vm.provision "shell", inline: "rm -f ansible_env_ready.yml", privileged: false
+  end
+end
