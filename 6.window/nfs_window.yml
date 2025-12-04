@@ -1,0 +1,38 @@
+---
+- name: setup for nfs server
+  hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: make nfs_shared directory
+      file:
+        path: /home/vagrant/nfs_shared
+        state: directory
+        mode: 0777
+    
+    - name: configure /etc/exports
+      become: yes
+      lineinfile:
+        path: /etc/exports
+        line: /home/vagrant/nfs_shared 192.168.8.0/24(rw,sync)
+    
+    - name: nfs service restart
+      become: yes
+      service:
+        name: nfs
+        state: restarted
+
+- name: setup nfs window client
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: mount
+      win_feature:
+        name: NFS-Client
+        state: present
+
+    - name: nfs_shared
+      win_command: net use "z:" "\\192.168.8.10/home/vagrant/nfs_shared"
+    - name: reboot
+      win_reboot:

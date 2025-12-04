@@ -1,0 +1,42 @@
+---
+- name: Install nginx on Windows
+  hosts: windows
+  gather_facts: no
+  tasks:
+    - name: Create directory
+      win_file:
+        path: C:\nginx
+        state: directory
+    
+    - name: download nginx
+      win_get_url:
+        url: http://nginx.org/download/nginx-1.14.0.zip
+        dest: c:\nginx\nginx-1.14.0.zip
+    
+    - name: unzip nginx
+      win_unzip:
+        src: c:\nginx\nginx-1.14.0.zip
+        dest: C:\nginx
+        delete_archive: yes
+    
+    - name: install NSSM
+      win_chocolatey:
+        name: nssm
+        state: present
+    
+    - name: download index.html
+      win_get_url:
+        url: https://www.apache.com
+        dest: c:\nginx\nginx-1.14.0\html\index.html
+    
+    - name: nginx service on by nssm
+      win_nssm:
+        name: nginx
+        application: C:\nginx\nginx-1.14.0\nginx.exe
+        state: present
+    
+    - name: restart nginx service
+      win_service:
+        name: nginx
+        state: restarted
+...

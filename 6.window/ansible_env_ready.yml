@@ -9,7 +9,26 @@
         path: /etc/ansible/hosts
         block: |
           [windows]
-          192.168.8.17
+          192.168.8.17 ansible_connection=winrm ansible_user=vagrant ansible_port=5985
+
+    - name: install epel-release
+      yum:
+        name: epel-release
+        state: present
+
+    - name: Install pip
+      shell: "{{ item }}"
+      with_items:
+        - "curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py"
+        - "python get-pip.py "
+
+    - name: upgrade pip
+      shell: "pip install --upgrade 'pip < 21.0'"
+
+    - name: install pywinrm
+      pip:
+        name: pywinrm
+        state: present
 
     - name: Create vim env's directories $ files
       shell: "{{ item }}"

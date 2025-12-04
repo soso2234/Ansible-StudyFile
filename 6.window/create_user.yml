@@ -1,0 +1,10 @@
+---
+- name: create user
+  hosts: windows
+  gather_facts: no
+  tasks:
+    - name: create user
+      win_user:
+        name: user
+        password: password
+        state: present

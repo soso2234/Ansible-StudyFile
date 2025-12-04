@@ -1,0 +1,9 @@
+---
+- name: setup window timezone
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: set timezone
+      win_timezone:
+        timezone: "Korea Standard Time"
