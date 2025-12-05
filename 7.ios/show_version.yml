@@ -1,0 +1,21 @@
+---
+
+- name: show version
+  hosts: localhost
+  gather_facts: no
+  connection: loacl
+
+  tasks:
+    - name: show version
+      ios_command:
+        commands: show version
+        provider:
+          host: 192.168.10.11
+          username: kim
+          password: kim
+          authorize: true
+          auth_pass: cisco
+      register: show_ver
+    - name: show
+      debug:
+        var: show_ver.stdout_lines
