@@ -1,0 +1,22 @@
+Vagrant.configure("2") do |config|
+  config.vbguest.auto_update = false
+  config.vm.define "ansible-server" do |cfg|
+    cfg.vm.box = "centos/7"
+    cfg.vm.provider "virtualbox" do |vb|
+      vb.name = "Ansible-Server"
+    end
+    cfg.vm.host_name = "ansible-server"
+    cfg.vm.network "private_network", ip: "192.168.8.10"
+    cfg.vm.network "forwarded_port", guest: 22, host: 60010, auto_correct: true, id: "ssh"
+    cfg.vm.synced_folder "../data", "/vagrant", disabled: true
+    cfg.vm.provision "shell", path: "centos_repo.sh", privileged: true
+    cfg.vm.provision "shell", path: "centos_scl_repo.sh", privileged: true
+    cfg.vm.provision "shell", path: "python3_install.sh", privileged: true
+    cfg.vm.provision "shell", path: "awscli_install.sh", privileged: true
+    cfg.vm.provision "shell", inline: "pip3 install boto3", privileged: true
+    cfg.vm.provision "shell", inline: "pip3 install ansible", privileged: false
+    cfg.vm.provision "file", source: "ansible_env_ready.yml", destination: "ansible_env_ready.yml"
+    cfg.vm.provision "shell", inline: "ansible-playbook ansible_env_ready.yml", privileged: false
+    cfg.vm.provision "shell", inline: "rm -f ansible_env_ready.yml", privileged: false
+  end
+end
