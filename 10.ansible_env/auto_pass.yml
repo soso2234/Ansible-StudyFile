@@ -1,0 +1,33 @@
+---
+- name: create authority server and nodes
+  hosts: centos:ubuntu
+  connection: localhost
+  serial: 1
+  gather_facts: no
+  vars:
+    ansible_password: vagrant
+
+  tasks:
+    - name: ssh-keyscan
+      command: /usr/bin/ssh-keyscan -t ecdsa {{ andible_host }}
+      register: keyscan
+
+    - name: input key
+      lineinfile:
+        path: ~/.ssh/knwon_hosts
+        line: "{{ item }}"
+        create: yes
+      with_items:
+        - "{{ keyscan.stdout_lines }}"
+
+    - name: ssh-keygen for authorized_key file
+      command: "ssh-keygen -b 2048 -t rsa -f ~/.ssh/id_rsa -q -N ''"
+      ignore_errors: yes
+      run_once: true
+
+    - name: input key for each node
+      connection: ssh
+      authorized_key:
+        user: vagrant
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
