@@ -1,0 +1,12 @@
+---
+- name: Remove NFS
+  hosts: all
+  gather_facts: yes
+  tasks:
+    - include_tasks: nfs_remo_clients.yml
+
+- name: Remove NFS
+  hosts: localhost
+  gather_facts: yes
+  tasks:
+    - include_tasks: nfs_remo_server.yml

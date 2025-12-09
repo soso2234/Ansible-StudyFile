@@ -1,0 +1,17 @@
+---
+- name: Remove
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: remove epel-release
+      action: "{{ ansible_pkg_mgr }} name=epel-release state=absent"
+      when: ansible_distribution == 'CentOS'
+
+    - name: remove nginx
+      action: "{{ ansible_pkg_mgr }} name=nginx state=absent"
+      when: ansible_distribution == 'CentOS'
+
+    - name: remove nginx web server
+      action: "{{ ansible_pkg_mgr }} name=nginx state=absent autoremove=yes"
+      when: ansible_distribution == 'Ubuntu'

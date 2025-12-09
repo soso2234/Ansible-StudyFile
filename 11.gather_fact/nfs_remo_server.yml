@@ -1,0 +1,17 @@
+- name: Remove nfs_shared directory
+  file:
+    path: "{{ ansible_user_dir }}/nfs_shared"
+    state: absent
+
+- name: configure /etc/exports
+  become: yes
+  lineinfile:
+    path: /etc/exports
+    line: "{{ ansible_user_dir }}/nfs_shared 192.168.8.0/24(rw,sync)"
+    state: absent
+
+- name: nfs service stop
+  become: yes
+  service:
+    name: nfs
+    state: stopped

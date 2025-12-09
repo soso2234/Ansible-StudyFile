@@ -1,0 +1,12 @@
+---
+- name: Install nginx
+  hosts: all
+  become: yes
+  tasks:
+    - name: nginx for centos
+      include_tasks: centos.yml
+      when: ansible_distribution == 'CentOS'
+
+    - name: nginx for ubuntu
+      include_tasks: ubuntu.yml
+      when: ansible_distribution == 'Ubuntu'

@@ -1,0 +1,16 @@
+---
+- name: Install nginx
+  hosts: all
+  become: yes
+  vars:
+    lnx_name: "{{ 'centos' if ansible_distribution == 'CentOS'
+                  else 'ubuntu' if ansible_distribution == 'Ubuntu'
+                  else 'Just Linux' }}"
+
+  tasks:
+    - name: nginx Linux 
+      include_tasks: "{{ lnx_name }}.yml"
+
+  handlers:
+    - name: restart nginx web server
+      service: name=nginx state=restarted

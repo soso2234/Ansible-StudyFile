@@ -1,0 +1,33 @@
+---
+- name: Setup for the Ansible's Environment
+  hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: Add "/etc/ansible/hosts"
+      blockinfile:
+        path: /etc/ansible/hosts
+        block: |
+          [centos]
+          192.168.8.[101:103]
+          [ubuntu]
+          192.168.8.[201:203]
+
+    - name: Create vim env's directories $ files
+      shell: "{{ item }}"
+      with_items:
+        - "touch /home/vagrant/.vimrc"
+        - "touch /home/vagrant/.bashrc"
+
+    - name: Configure vimrc
+      lineinfile:
+        path: /home/vagrant/.vimrc
+        line: "set number"
+
+    - name: Configure Bashrc
+      lineinfile:
+        path: /home/vagrant/.bashrc
+        line: "{{ item }}"
+      with_items:
+        - "alias ans='ansible'" 
+        - "alias anp='ansible-playbook'"

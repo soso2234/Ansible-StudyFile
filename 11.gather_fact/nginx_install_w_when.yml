@@ -1,0 +1,30 @@
+---
+- name: Install nginx
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: install epel-release
+      action: "{{ ansible_pkg_mgr }} name=epel-release state=latest" 
+      when: ansible_distribution == 'CentOS'
+    
+    - name: install nginx web server
+      action: "{{ ansible_pkg_mgr }} name=nginx state=present" 
+      when: ansible_distribution == 'CentOS'
+
+    - name: upload default index.html
+      get_url: url=http://www.apache.com dest=/usr/share/nginx/html/ mode=0644
+      when: ansible_distribution == 'CentOS'
+
+    - name: start nginx
+      service: name=nginx state=started
+      when: ansible_distribution == 'CentOS'
+
+    - name: install nginx web server ubuntu
+      action: "{{ ansible_pkg_mgr }} name=nginx state=present update_cache=yes"
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: upload default index.html
+      get_url: url=http://www.apache.com dest=/usr/share/nginx/html/
+               mode=0644 validate_certs=no
+      when: ansible_distribution == 'Ubuntu'

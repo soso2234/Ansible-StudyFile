@@ -1,0 +1,10 @@
+- name: install epel-release
+  action: "{{ ansible_pkg_mgr }} name=epel-release state=latest" 
+
+- name: install nginx web server
+  action: "{{ ansible_pkg_mgr }} name=nginx state=present" 
+
+- name: upload default index.html
+  get_url: url=http://www.apache.com dest=/usr/share/nginx/html/ mode=0644
+  notify:
+    - restart nginx web server
